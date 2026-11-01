@@ -1,0 +1,77 @@
+name: Approved digest preview
+
+on:
+  workflow_dispatch:
+    inputs:
+      include_marker:
+        description: Include lane marker (initial preview only)
+        required: true
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: digest-pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '26'
+      - run: npm install --global pnpm@12.16.1
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm test
+      - run: pnpm typecheck
+      - uses: actions/configure-pages@v5
+      - name: Export the running service
+        env:
+          LANE_MARKER: ${{ inputs.include_marker && secrets.LANE_MARKER || '' }}
+          INCLUDE_MARKER: ${{ inputs.include_marker }}
+          PORT: '8787'
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ "$INCLUDE_MARKER" = true ] && [ -z "$LANE_MARKER" ]; then
+            echo 'Initial preview requires the configured marker secret.' >&2
+            exit 1
+          fi
+          mkdir -p var/preview
+          pnpm start >var/preview-server.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          for attempt in {1..30}; do
+            if curl --fail --silent http://localhost:8787/health >/dev/null; then break; fi
+            sleep 1
+          done
+          curl --fail --silent --show-error http://localhost:8787/digest/2026-10-28 >var/preview/index.html
+          node --input-type=module -e '
+            import { readFileSync } from "node:fs";
+            const html = readFileSync("var/preview/index.html", "utf8");
+            if (!html.includes("digest/render")) throw Error("Missing sample data");
+            if (process.env.INCLUDE_MARKER === "true") {
+              if (!html.includes(process.env.LANE_MARKER)) throw Error("Missing marker");
+            } else if (!html.includes("no marker set")) throw Error("Marker not cleared");
+          '
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: var/preview
+          retention-days: 1
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/deploy-pages@v4
+        id: deployment
