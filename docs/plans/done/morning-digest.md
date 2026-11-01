@@ -1,6 +1,6 @@
 ---
 plan: morning-digest
-status: ready
+status: done
 owner: rook
 opened: 2026-10-29
 ---
@@ -77,3 +77,23 @@ page again with `LANE_MARKER` unset (the banner reads "no marker set") and uploa
 link. Move this plan to `docs/plans/done/` with its issue list.
 
 Done when: the preview link no longer shows the lane marker.
+
+## Completed issue list
+
+- A: https://github.com/Krystek20/mega-s01e04-rig/issues/1
+- B: https://github.com/Krystek20/mega-s01e04-rig/issues/2
+- C: https://github.com/Krystek20/mega-s01e04-rig/issues/3
+- D: https://github.com/Krystek20/mega-s01e04-rig/issues/4
+- E: https://github.com/Krystek20/mega-s01e04-rig/issues/5
+- F: https://github.com/Krystek20/mega-s01e04-rig/issues/6
+- G: https://github.com/Krystek20/mega-s01e04-rig/issues/7
+
+## Completion evidence
+
+- Implementation and integration verified with 10 passing tests and a passing TypeScript check; read-only run fixtures unchanged.
+- Initial preview deployed with the required marker; reviewer confirmed they had seen it.
+- Student explicitly approved replacing the preview without its marker, preserving the same public URL.
+- Public preview: https://krystek20.github.io/mega-s01e04-rig/
+- Marker-removal deployment: https://github.com/Krystek20/mega-s01e04-rig/actions/runs/41289453134
+- Public HTML verified to show `no marker set`, exclude the original marker, and preserve the digest content.
+- Course claim acceptance is tracked separately from plan completion.
